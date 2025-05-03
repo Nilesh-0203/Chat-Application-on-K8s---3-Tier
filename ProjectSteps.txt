@@ -1,0 +1,234 @@
+Install the minikube and docker in local  
+Clone the devloper code to the local
+	--git clone https://github.com/Nilesh-0203/full-stack_chatApp.git
+Now we have to create the dockerfile and push the docker image of chatapp-backend and chatapp-frontend it on the dockerhub beacause we have to create the pod of that 
+  	--- Go to backend folder -> docker build -t nilesh0203/chatapp-backend:latest .
+	--- docker push nilesh0203/chatapp-backend:latest
+ 	--- Go to frontend folder -> docker build -t nilesh0203/chatapp-frontend:latest .
+	--- docker push nilesh0203/chatapp-frontend:latest
+Create A Folder k8s and now we create all the yml files inside this folder
+
+Create namespace.yml
+	apiVersion: v1
+	kind: Namespace
+	metadata:
+  		name: chat-app
+kubectl create -f namespace.yml
+kubectl get ns
+
+Create the deployment for frontend, backend and monodb 
+below is example of frontend:
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: frontend-deployment
+  namespace: chat-app
+spec:
+  replicas: 1
+  selector:
+      matchLabels:
+        app: frontend
+  template:
+    metadata:
+      name: frontend-pod
+      namespace: chat-app
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: chatapp-frontend
+          image: nilesh0203/chatapp-frontend:latest    // change nilesh0203/chatapp-backend:latest (dockerhub) - for backend and mongo:latest for mongodb
+          ports:
+          - containerPort: 80  // this will get in repected dockerfile
+          env:  // this also mention in dockerfile
+          - name: NODE_ENV
+            value: production
+
+
+add below enviornment varriables in mongo  and also set containerport to 27017
+          env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            value: root
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            value: root
+
+
+Now create Persistent volume and persistet volume claim for mongodb
+Create mongodb-pv.yml 
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongodb-pv
+  namespace: chat-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 5Gi
+  hostPath:
+    path: /data
+
+Create mongodb-pvc.yml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongodb-pvc
+  namespace: chat-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  
+
+add volume to mongodb deployment
+spec:
+      containers:
+      - name: chatapp-mongodb
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          value: mongodbadmin
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          value: secret
+      volumes:
+      - name: mongodb-data
+        persistentVolumeClaim:
+          claimName: mongodb-pvc
+
+
+kubectl apply -f mongodb-pv.yml
+kubectl apply -f mongodb-pvc.yml
+kubectl apply -f mongodb-deployment.yml
+kubectl get pods -n chat-app
+
+Now we do 
+kubectl apply -f backend-deployment.yml
+kubectl apply -f frontend-deployment.yml
+
+but when we run frontend yml it does not create the container because it requires backend service.yml because in frontend it uses the backend api to connect nginx(acts as reverse proxy) 
+
+So now create backend-service.yml and frontend-service.yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: chat-app
+spec:
+  selector:
+    app: backend  // take from backend-deployment because we have to create service for that deployment
+  ports:   // change port: 80 and targetPort:80 for frontend and name and selector to frontend 
+  - port: 5001  
+    targetPort: 5001
+
+
+kubectl apply -f frontend-service.yml
+kubectl apply -f backend-service.yml
+kubectl apply -f backend-deployment.yml
+
+kubectl get pods -n chat-app
+
+Now we see frontend, backend and mongodb container is runing
+
+Now forward the port 
+kubectl port-forward service/backend -n chat-app 5001:5001 // we use this command to forward the port but we want to run in background so use 
+
+kubectl port-forward service/backend -n chat-app 5001:5001 & (in bash environment)
+or 
+use below for powershell environment
+Start-Process "kubectl" -ArgumentList "port-forward", "service/backend", "-n", "chat-app", "5001:5001"
+Start-Process "kubectl" -ArgumentList "port-forward", "service/frontend", "-n", "chat-app", "80:80"
+ 
+
+
+then go to browser type localhost:80 it will give output localhost:5001 it is not giving the output 
+then I check the logs of backend by using command kubectl logs <Name of pod>
+then I realise that I had not connect the mongodb database to backend 
+
+so to the backend-deployment I add the also I create one secrets.yml file to keep secret varriable
+	env:
+          - name: NODE_ENV
+            value: production
+          - name: MONGODB_URI
+            value: "mongodb://mongodbadmin:secret@mongodb:27017/dbname?authSource=admin" // we get this from devloper github repo readme
+          - name: JWT_SECRET // taken from secret.yml file
+            valueFrom:
+              secretKeyRef:
+                name: chatapp-secrets
+                key: jwt
+          - name: PORT
+            value: "5001
+
+Now Problem is solved, every container is running and we can now login into the chatapp 
+
+We open the chatapp by writting localhost:80 in browser now we want to write chat-tws.com/  -> it should redirect to login that is frontend (port 80)
+and chat-tws.com/api -> it should redirect to backend (port 5001)
+
+for this we create the ingress.yml file 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chatapp-ingress
+  namespace: chat-app
+  labels:
+    name: chatapp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+  - host: chat-tws.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: frontend
+            port: 
+              number: 80
+      - pathType: Prefix
+        path: "/api"
+        backend:
+          service:
+            name: backend
+            port: 
+              number: 5001
+
+
+
+kubectl apply -f ingress.yml
+
+Now when we run this chat-tws.com/ it is not giving the response because we have to install minikube ingress controller
+minikube addons enable ingress
+kubectl get ns
+kubectl get svc -n ingress-ngix  // check the services running in ingress-ngix namespace
+then we have to forward port of the ingress service to 80 but already our frontend service is runnnig on port 80  error occures
+
+Now we can solve by 
+delete all -> kubectl delete -f .
+kubectl apply -f namespace.yml
+kubectl apply -f mongodb-pv.yml
+kubectl apply -f mongodb-pvc.yml
+kubectl apply -f .
+
+Now forward the port of ingress service to 80
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

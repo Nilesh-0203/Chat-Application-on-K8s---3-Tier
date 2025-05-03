@@ -1,0 +1,104 @@
+1 minikube
+   2 minikube start
+   3 minikube start --driver=docker
+   4 kubclt get nodes
+   5 kubeclt get nodes
+   6 kubectl get nodes
+   7 clear
+   8 git clone https://github.com/Nilesh-0203/full-stack_chatApp.git
+   9 docker login -u nilesh0203
+  10 ls
+  11 cd full-stack_chatApp
+  12 ls
+  13 cd backend
+  14 ls
+  15 docker build -t nilesh0203/chatapp-backend:latest .
+  16 docker push nilesh0203/chatapp-backend:latest
+  17 docker images
+  18 cd ..
+  19 cd frontend
+  20 ls
+  21 docker build -t nilesh0203/chatapp-frontend:latest .
+  22 docker push nilesh0203/chatapp-frontend:latest
+  23 docker images
+
+
+1 cd k8s
+   2 ls
+   3 cd full-stack_chatApp
+   4 cd k8s
+   5 ls
+   6 kubectl create -f namespace.yml
+   7 kubectl create -f namespace.yml
+   8 kubectl create -f namespace.yml
+   9 kubectl get ns
+  10 clear
+  11 kubectl apply -f mongodb-pv.yml
+  12 kubectl get pv -n chat-app
+  13 kubectl apply -f mongodb-pvc.yml
+  14 kubectl get pv -n chat-app
+  15 kubectl apply -f mongodb-deployment.yml
+  16 kubectl get pods
+  17 kubectl get pods -n chat-app
+  18 kubectl get pods -n chat-app
+  19 kubectl get pods -n chat-app
+  20 kubectl get pods -n chat-app
+  21 kubectl get pods -n chat-app
+  22 kubectl get pods -n chat-app
+  23 kubectl apply -f  backend-deployment.yml
+  24 kubectl apply -f  backend-service.yml
+  25 kubectl apply -f  frontend-service.yml
+  26 ls
+  27 kubectl apply -f frontend-deployment.yml
+  28 kubectl get pods -n chat-app
+  29 kubectl get svc -n chat-app
+  30 kubectl port-forward service/backend -n chat-app 5001:5001
+  31 kubectl port-forward service/backend -n chat-app 5001:5001 &
+  32 kubectl port-forward service/backend -n chat-app 5001:5001
+  33 kubectl port-forward service/backend -n chat-app 5001:5001 &
+  34 Start-Process "kubectl" -ArgumentList "port-forward", "service/backend", "-n", "chat-app", "5001:5001"
+  35 sudo -E Start-Process "kubectl" -ArgumentList "port-forward", "service/frontend", "-n", "chat-app"
+  36 sudo -E Start-Process "kubectl" -ArgumentList "port-forward", "service/frontend", "-n", "chat-app", "80:80"
+  37 kubectl port-forward service/frontend -n chat-app 80:80
+  38 Start-Process "kubectl" -ArgumentList "port-forward", "service/frontend", "-n", "chat-app", "80:80"
+  39 clear
+  40 clear
+  41 clear
+  42 kubectl apply -f mongodb-service.yml
+  43 kubectl apply -f secrets.yml
+  44 kubectl apply -f secrets.yml
+  45 kubectl apply -f backend-deployment.yml
+  46 kubectl get pods -n chat-app
+  47 sudo vim /etc/hosts
+  48 clear
+  49 kubectl apply -f ingress.yml
+  50 kubectl get ing -n chat-app
+  51 minikube addons enable ingress
+  52 kubectl get ns
+  53 kubectl get svc -n ingress-nginx
+  54 sudo -E kubectl port-forward svc/ingress-nginx-controller -n ingress-nginx 80:80
+  55 kubectl port-forward svc/ingress-nginx-controller -n ingress-nginx 80:80
+  56 kubectl delete -f .
+  57 kubectl apply -f namespace.yml
+  58 kubectl apply -f mongodb-pv.yml
+  59 kubectl apply -f mongodb-pvc.yml
+  60 kubectl apply -f .
+  61 kubectl port-forward svc/ingress-nginx-controller -n ingress-nginx 80:80
+  62 kubectl port-forward svc/ingress-nginx-controller -n ingress-nginx 81:80
+  63 Start-Process "kubectl" -ArgumentList "port-forward", "service/backend", "-n", "chat-app", "5001:5001"
+  64 Start-Process "kubectl" -ArgumentList "port-forward", "service/frontend", "-n", "chat-app", "80:80"
+  65 kubectl port-forward svc/ingress-nginx-controller -n ingress-nginx 81:80
+  66 clear
+  67 ls
+  68 git status
+  69 git add .
+  70 git status
+  71 git commit -m "added k8s manifests"
+  72 git push origin main
+  73 git push origin master
+  74 git push origin main
+  75 git branch
+  76 git push origin DevOps
+  77 git login
+  78 git push origin DevOps
+  79 git status
